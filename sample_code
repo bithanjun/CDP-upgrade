@@ -1,1 +1,71 @@
 ##本文档是为了演示升级到CDP后，应用层面所需的修改
+### Hive
+### Spark
+Spark读取Hive内表需要使用HWC方式，如下所示
+
+如果不使用HWC方式，会报如下的错误：
+
+scala> sql("select * from tpcds_bin_partitioned_orc_20.web_sales").show()
+org.apache.spark.sql.AnalysisException:
+Spark has no access to table `tpcds_bin_partitioned_orc_20`.`web_sales`. Clients can access this table only if
+they have the following capabilities: CONNECTORREAD,HIVEFULLACIDREAD,HIVEFULLACIDWRITE,HIVEMANAGESTATS,HIVECACHEINVALIDATE,CONNECTORWRITE.
+This table may be a Hive-managed ACID table, or require some other capability that Spark
+currently does not implement;
+  at org.apache.spark.sql.catalyst.catalog.CatalogUtils$.throwIfNoAccess(ExternalCatalogUtils.scala:280)
+  at org.apache.spark.sql.hive.HiveTranslationLayerCheck$$anonfun$apply$1.applyOrElse(HiveTranslationLayerStrategies.scala:109)
+  at org.apache.spark.sql.hive.HiveTranslationLayerCheck$$anonfun$apply$1.applyOrElse(HiveTranslationLayerStrategies.scala:85)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1$$anonfun$2.apply(AnalysisHelper.scala:108)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1$$anonfun$2.apply(AnalysisHelper.scala:108)
+  at org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:71)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1.apply(AnalysisHelper.scala:107)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1.apply(AnalysisHelper.scala:106)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.allowInvokingTransformsInAnalyzer(AnalysisHelper.scala:194)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$class.resolveOperatorsDown(AnalysisHelper.scala:106)
+  at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsDown(LogicalPlan.scala:29)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1$$anonfun$apply$6.apply(AnalysisHelper.scala:113)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$$anonfun$resolveOperatorsDown$1$$anonfun$apply$6.apply(AnalysisHelper.scala:113)
+  at org.apache.spark.sql.catalyst.trees.TreeNode$$anonfun$4.apply(TreeNode.scala:330)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.mapProductIterator(TreeNode.scala:188)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.mapChildren(TreeNode.scala:328)
+  
+  
+采用HWC的方式如下
+启动spark-shell
+spark-shell --jars /opt/cloudera/parcels/CDH/lib/hive_warehouse_connector/hive-warehouse-connector-assembly-1.0.0.7.1.5.0-257.jar \
+--conf "spark.sql.extensions=com.qubole.spark.hiveacid.HiveAcidAutoConvertExtension" \ --conf "spark.datasource.hive.warehouse.read.via.llap=false" \
+--conf "spark.sql.hive.hwc.execution.mode=spark" \
+--conf "spark.kryo.registrator=com.qubole.spark.hiveacid.util.HiveAcidKyroRegistrator" \
+--conf "spark.hadoop.hive.metastore.uris=thrift://172.27.12.128:9083"
+
+
+同样的执行，结果如下
+
+scala> sql("select * from tpcds_bin_partitioned_orc_20.web_sales").show()
+Hive Session ID = 2cb2adc9-32bc-42ec-88d9-1fff4f6e5478
+20/12/19 04:28:40 WARN util.package: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
++---------------+---------------+----------+-------------------+----------------+----------------+---------------+-------------------+----------------+----------------+---------------+--------------+--------------+---------------+---------------+-----------+---------------+-----------+-----------------+-------------+--------------+-------------------+------------------+---------------------+-----------------+----------+-------------+----------------+-----------+-------------------+--------------------+------------------------+-------------+---------------+
+|ws_sold_time_sk|ws_ship_date_sk|ws_item_sk|ws_bill_customer_sk|ws_bill_cdemo_sk|ws_bill_hdemo_sk|ws_bill_addr_sk|ws_ship_customer_sk|ws_ship_cdemo_sk|ws_ship_hdemo_sk|ws_ship_addr_sk|ws_web_page_sk|ws_web_site_sk|ws_ship_mode_sk|ws_warehouse_sk|ws_promo_sk|ws_order_number|ws_quantity|ws_wholesale_cost|ws_list_price|ws_sales_price|ws_ext_discount_amt|ws_ext_sales_price|ws_ext_wholesale_cost|ws_ext_list_price|ws_ext_tax|ws_coupon_amt|ws_ext_ship_cost|ws_net_paid|ws_net_paid_inc_tax|ws_net_paid_inc_ship|ws_net_paid_inc_ship_tax|ws_net_profit|ws_sold_date_sk|
++---------------+---------------+----------+-------------------+----------------+----------------+---------------+-------------------+----------------+----------------+---------------+--------------+--------------+---------------+---------------+-----------+---------------+-----------+-----------------+-------------+--------------+-------------------+------------------+---------------------+-----------------+----------+-------------+----------------+-----------+-------------------+--------------------+------------------------+-------------+---------------+
+|          65319|        2451227|     25246|             174991|         1758861|            1084|         124907|             239584|          151942|            4023|         101893|           242|            20|             12|              3|         44|         426395|         65|            49.98|        73.47|         27.91|            2961.40|           1814.15|              3248.70|          4775.55|     90.70|         0.00|          477.10|    1814.15|            1904.85|             2291.25|                 2381.95|     -1434.55|        2451200|
+|          65319|        2451202|      6374|             174991|         1758861|            1084|         124907|             239584|          151942|            4023|         101893|            52|            13|             13|              4|         35|         426395|         24|            33.46|        84.65|         36.39|            1158.24|            873.36|               803.04|          2031.60|     17.46|         0.00|          893.76|     873.36|             890.82|             1767.12|                 1784.58|        70.32|        2451200|
+|          65319|        2451236|     15193|             174991|         1758861|            1084|         124907|             239584|          151942|            4023|         101893|           235|            10|              2|              3|        226|         426395|         55|            36.66|        96.78|          7.74|            4897.20|            425.70|              2016.30|          5322.90|      6.13|       221.36|          851.40|     204.34|             210.47|             1055.74|
+
+
+
+import com.hortonworks.hwc.HiveWarehouseSession
+import com.hortonworks.hwc.HiveWarehouseSession._
+val hive = HiveWarehouseSession.session(spark).build()
+hive.setDatabase("tpcds_bin_partitioned_orc_20")
+val df = hive.sql("select * from web_sales")
+df.createOrReplaceTempView("web_sales")
+hive.setDatabase("testDatabase")
+hive.createTable("newTable")
+.ifNotExists()
+.column("ws_sold_time_sk", "bigint")
+.column("ws_ship_date_sk", "bigint")
+.create()
+sql("SELECT ws_sold_time_sk, ws_ship_date_sk FROM web_sales WHERE ws_sold_time_sk > 80000)
+.write.format(HIVE_WAREHOUSE_CONNECTOR)
+.mode("append")
+.option("table", "newTable")
+.save()
