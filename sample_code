@@ -77,7 +77,6 @@ SELECT greatest(nvl(col1,0),nvl(col2,0)) FROM test;
 Spark读取Hive内表需要使用HWC方式，如下所示
 
 如果不使用HWC方式，会报如下的错误：
-
 scala> sql("select * from tpcds_bin_partitioned_orc_20.web_sales").show()
 org.apache.spark.sql.AnalysisException:
 Spark has no access to table `tpcds_bin_partitioned_orc_20`.`web_sales`. Clients can access this table only if
@@ -103,6 +102,8 @@ currently does not implement;
   
   
 采用HWC的方式如下
+
+##Spark Direct Reader方式
 启动spark-shell
 spark-shell --jars /opt/cloudera/parcels/CDH/lib/hive_warehouse_connector/hive-warehouse-connector-assembly-1.0.0.7.1.5.0-257.jar \
 --conf "spark.sql.extensions=com.qubole.spark.hiveacid.HiveAcidAutoConvertExtension" \ --conf "spark.datasource.hive.warehouse.read.via.llap=false" \
@@ -125,20 +126,58 @@ Hive Session ID = 2cb2adc9-32bc-42ec-88d9-1fff4f6e5478
 
 
 
+##JDBC mode 
+启动spark-shell
+spark-shell --jars /opt/cloudera/parcels/CDH/lib/hive_warehouse_connector/hive-warehouse-connector-assembly-1.0.0.7.1.5.0-257.jar \
+--conf "spark.sql.extensions=com.hortonworks.spark.sql.rule.Extensions" \
+--conf "spark.datasource.hive.warehouse.read.via.llap=false" \
+--conf "spark.sql.hive.hwc.execution.mode=spark" \
+--conf spark.datasource.hive.warehouse.load.staging.dir=/tmp/ \
+--conf spark.datasource.hive.warehouse.read.jdbc.mode=cluster \
+--conf spark.sql.hive.hiveserver2.jdbc.url=jdbc:hive2://ccycloud-1.cdp-hanjun.root.hwx.site:10000/default;
+
+
+执行结果如下
+
+scala> sql("select * from tpcds_bin_partitioned_orc_20.web_sales").show(10)
+Hive Session ID = 0c942b4e-7c84-4b0e-bdd2-8121c74357d4
+20/12/19 22:25:25 WARN util.package: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
++---------------+---------------+----------+-------------------+----------------+----------------+---------------+-------------------+----------------+----------------+---------------+--------------+--------------+---------------+---------------+-----------+---------------+-----------+-----------------+-------------+--------------+-------------------+------------------+---------------------+-----------------+----------+-------------+----------------+-----------+-------------------+--------------------+------------------------+-------------+---------------+
+|ws_sold_time_sk|ws_ship_date_sk|ws_item_sk|ws_bill_customer_sk|ws_bill_cdemo_sk|ws_bill_hdemo_sk|ws_bill_addr_sk|ws_ship_customer_sk|ws_ship_cdemo_sk|ws_ship_hdemo_sk|ws_ship_addr_sk|ws_web_page_sk|ws_web_site_sk|ws_ship_mode_sk|ws_warehouse_sk|ws_promo_sk|ws_order_number|ws_quantity|ws_wholesale_cost|ws_list_price|ws_sales_price|ws_ext_discount_amt|ws_ext_sales_price|ws_ext_wholesale_cost|ws_ext_list_price|ws_ext_tax|ws_coupon_amt|ws_ext_ship_cost|ws_net_paid|ws_net_paid_inc_tax|ws_net_paid_inc_ship|ws_net_paid_inc_ship_tax|ws_net_profit|ws_sold_date_sk|
++---------------+---------------+----------+-------------------+----------------+----------------+---------------+-------------------+----------------+----------------+---------------+--------------+--------------+---------------+---------------+-----------+---------------+-----------+-----------------+-------------+--------------+-------------------+------------------+---------------------+-----------------+----------+-------------+----------------+-----------+-------------------+--------------------+------------------------+-------------+---------------+
+|          71262|        2450923|     25249|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           139|            22|             16|              5|         51|         116201|         10|            68.56|       142.60|         91.26|             513.40|            912.60|               685.60|          1426.00|     36.50|         0.00|           42.70|     912.60|             949.10|              955.30|                  991.80|       227.00|        2450816|
+|          71262|        2450844|     18277|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           140|            13|              6|              2|        213|         116201|         55|            34.19|        74.19|          5.93|            3754.30|            326.15|              1880.45|          4080.45|      6.52|         0.00|         1223.75|     326.15|             332.67|             1549.90|                 1556.42|     -1554.30|        2450816|
+|          71262|        2450819|     26314|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|            28|            22|             16|              3|        127|         116201|         89|            11.57|        17.70|          7.61|             898.01|            677.29|              1029.73|          1575.30|     54.18|         0.00|           31.15|     677.29|             731.47|              708.44|                  762.62|      -352.44|        2450816|
+|          71262|        2450856|     10309|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|            74|             1|             18|              5|         82|         116201|         45|            22.04|        55.10|         45.18|             446.40|           2033.10|               991.80|          2479.50|     20.33|         0.00|          793.35|    2033.10|            2053.43|             2826.45|                 2846.78|      1041.30|        2450816|
+|          71262|        2450864|     15025|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           175|             2|             16|              5|        107|         116201|         51|            87.40|       186.16|         22.33|            8355.33|           1138.83|              4457.40|          9494.16|     22.32|       819.95|         3512.37|     318.88|             341.20|             3831.25|                 3853.57|     -4138.52|        2450816|
+|          71262|        2450851|     13273|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|            19|            20|              5|              1|         15|         116201|         78|            83.05|       210.11|         58.83|           11799.84|           4588.74|              6477.90|         16388.58|    261.55|       229.43|         4260.36|    4359.31|            4620.86|             8619.67|                 8881.22|     -2118.59|        2450816|
+|          71262|        2450903|      9656|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           110|            28|              1|              4|        317|         116201|          3|            13.66|        40.43|         36.79|              10.92|            110.37|                40.98|           121.29|      0.00|         0.00|           31.53|     110.37|             110.37|              141.90|                  141.90|        69.39|        2450816|
+|          71262|        2450889|     23798|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           122|             7|              2|              5|         98|         116201|        100|            24.91|        25.65|         24.88|              77.00|           2488.00|              2491.00|          2565.00|     26.37|      1169.36|          615.00|    1318.64|            1345.01|             1933.64|                 1960.01|     -1172.36|        2450816|
+|          71262|        2450915|      5533|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           100|            28|              6|              4|        100|         116201|         22|            42.76|       109.46|         29.55|            1758.02|            650.10|               940.72|          2408.12|     58.50|         0.00|          914.98|     650.10|             708.60|             1565.08|                 1623.58|      -290.62|        2450816|
+|          71262|        2450922|     24914|             173735|         1745974|            4660|          29499|             173735|         1745974|            4660|          29499|           235|            26|              3|              4|        225|         116201|         46|            12.19|        20.96|          6.49|             665.62|            298.54|               560.74|           964.16|      7.76|       143.29|          424.12|     155.25|             163.01|              579.37|                  587.13|      -405.49|        2450816|
++---------------+---------------+----------+-------------------+----------------+----------------+---------------+-------------------+----------------+----------------+---------------+--------------+--------------+---------------+---------------+-----------+---------------+-----------+-----------------+-------------+--------------+-------------------+------------------+---------------------+-----------------+----------+-------------+----------------+-----------+-------------------+--------------------+------------------------+-------------+---------------+
+only showing top 10 rows
+
+
+##dataframe 方式
+
+
 import com.hortonworks.hwc.HiveWarehouseSession
 import com.hortonworks.hwc.HiveWarehouseSession._
+
 val hive = HiveWarehouseSession.session(spark).build()
 hive.setDatabase("tpcds_bin_partitioned_orc_20")
-val df = hive.sql("select * from web_sales")
-df.createOrReplaceTempView("web_sales")
-hive.setDatabase("testDatabase")
-hive.createTable("newTable")
-.ifNotExists()
-.column("ws_sold_time_sk", "bigint")
-.column("ws_ship_date_sk", "bigint")
-.create()
-sql("SELECT ws_sold_time_sk, ws_ship_date_sk FROM web_sales WHERE ws_sold_time_sk > 80000)
-.write.format(HIVE_WAREHOUSE_CONNECTOR)
-.mode("append")
-.option("table", "newTable")
-.save()
+val df = hive.sql("select * from tpcds_bin_partitioned_orc_20.web_sales")
+df.createOrReplaceTempView("df_web_sales")
+hive.setDatabase("math")
+hive.createTable("newTable").ifNotExists().column("ws_sold_time_sk", "bigint").column("ws_ship_date_sk", "bigint").create()
+hive.sql("SELECT ws_sold_time_sk, ws_ship_date_sk FROM df_web_sales WHERE ws_sold_time_sk > 80000").write.format("com.hortonworks.spark.sql.hive.llap.HiveWarehouseConnector").mode("append").option("table", "newTable").save()
+
+hive.sql("select * from math.newTable").show(1)
++---------------+---------------+
+|ws_sold_time_sk|ws_ship_date_sk|
++---------------+---------------+
+|          84134|        2450840|
++---------------+---------------+
+
+
