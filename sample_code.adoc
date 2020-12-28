@@ -1,12 +1,15 @@
 ##本文档是为了演示升级到CDP后，应用层面所需的修改
 
 ### Hive
-1. Casting Timestamps
+**1. Casting Timestamps**
+
 产生的UTC时间
+
 SELECT CAST(1597217764557 AS TIMESTAMP);
 2020-08-12 07:36:04.557
 
 产生当前时区的时间，也就是北京时间
+
 select from_utc_timestamp(1597217764557,'PRC');
 2020-08-12 15:36:04.557
 
