@@ -336,3 +336,98 @@ ROW                                                              COLUMN+CELL
 Took 0.0077 seconds
 hbase:011:0>
 ```
+
+## ScanTable ##
+
+**错误方式**
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+
+public class ScanTable{
+
+    public static void main(String args[]) throws IOException{
+
+        Configuration config = HBaseConfiguration.create();
+        HTable table = new HTable(config, "employee");
+
+        // instantiate the Scan class
+        Scan scan = new Scan();
+
+        // scan the columns
+        scan.addColumn(Bytes.toBytes("personal"), Bytes.toBytes("name"));
+        scan.addColumn(Bytes.toBytes("personal"), Bytes.toBytes("age"));
+
+        // get the ResultScanner
+        ResultScanner scanner = table.getScanner(scan);
+        for (Result result = scanner.next(); result != null; result=scanner.next())
+            System.out.println("Found row : " + result);
+
+        scanner.close();
+    }
+}
+
+```
+
+**错误信息**
+```
+Error:(17, 24) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构造器 HTable应用到给定类型;
+  需要: org.apache.hadoop.hbase.client.ConnectionImplementation,org.apache.hadoop.hbase.client.TableBuilderBase,org.apache.hadoop.hbase.client.RpcRetryingCallerFactory,org.apache.hadoop.hbase.ipc.RpcControllerFactory,java.util.concurrent.ExecutorService
+  找到: org.apache.hadoop.conf.Configuration,java.lang.String
+  原因: 实际参数列表和形式参数列表长度不同
+```
+
+**正确方式**
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+
+public class ScanTable{
+
+    public static void main(String args[]) throws IOException{
+
+        Configuration config = HBaseConfiguration.create();
+//        HTable table = new HTable(config, "employee");
+
+        Connection connection = ConnectionFactory.createConnection(config);
+        Table table = connection.getTable(TableName.valueOf("employee"));
+
+        // instantiate the Scan class
+        Scan scan = new Scan();
+
+        // scan the columns
+        scan.addColumn(Bytes.toBytes("personal"), Bytes.toBytes("name"));
+        scan.addColumn(Bytes.toBytes("personal"), Bytes.toBytes("age"));
+
+        // get the ResultScanner
+        ResultScanner scanner = table.getScanner(scan);
+        for (Result result = scanner.next(); result != null; result=scanner.next()) {
+            System.out.println("Found row : " + result);
+        }
+
+        scanner.close();
+    }
+}
+
+```
+
+## 结果 ##
+```
+Found row : keyvalues={row2001/personal:age/1609585694205/Put/vlen=2/seqid=0, row2001/personal:name/1609585694205/Put/vlen=5/seqid=0}
+```
+
