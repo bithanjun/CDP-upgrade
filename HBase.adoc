@@ -44,9 +44,96 @@ public class InsertData {
 }
 ```
 
+*部分错误信息*
+
+```
+Error:(16, 25) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构造器 HTable应用到给定类型;
+  需要: org.apache.hadoop.hbase.client.ConnectionImplementation,org.apache.hadoop.hbase.client.TableBuilderBase,org.apache.hadoop.hbase.client.RpcRetryingCallerFactory,org.apache.hadoop.hbase.ipc.RpcControllerFactory,java.util.concurrent.ExecutorService
+  找到: org.apache.hadoop.conf.Configuration,java.lang.String
+  原因: 实际参数列表和形式参数列表长度不同
+
+Error:(22, 10) java: 对于add(byte[],byte[],byte[]), 找不到合适的方法
+    方法 org.apache.hadoop.hbase.client.Mutation.add(org.apache.hadoop.hbase.Cell)不适用
+      (实际参数列表和形式参数列表长度不同)
+    方法 org.apache.hadoop.hbase.client.Put.add(org.apache.hadoop.hbase.Cell)不适用
+      (实际参数列表和形式参数列表长度不同)
+
+```
 **正确方式**
 
+```
+package main.java.org.hadoop.hbase.hbasetest;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+
+public class InsertData {
+    private static final TableName TABLE_NAME = TableName.valueOf("employee");
+    private static final byte[] CF_NAME = Bytes.toBytes("personal");
+    public static void main(String[] args) throws IOException {
+        String[] families = new String[] { "personal", "contactinfo" };
+        // instantiate Configuration class
+        Configuration config = HBaseConfiguration.create();
+        try (Connection connection = ConnectionFactory.createConnection(config); Admin admin = connection.getAdmin()) {
+            if(!admin.tableExists(TABLE_NAME)) {
+                TableDescriptor desc = TableDescriptorBuilder.newBuilder(TABLE_NAME)
+                        .setColumnFamilies(Arrays.stream(families)
+                                .map(fam -> ColumnFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(fam)).build())
+                                .collect(Collectors.toList()))
+                        .build();
+                admin.createTable(desc);
+            }
+
+            Put p = new Put(Bytes.toBytes("row2001"));
+            p.addColumn(Bytes.toBytes("personal"),
+                    Bytes.toBytes("name"),Bytes.toBytes("Vivek"));
+            p.addColumn(Bytes.toBytes("personal"),
+                    Bytes.toBytes("age"),Bytes.toBytes("17"));
+            p.addColumn(Bytes.toBytes("contactinfo"),Bytes.toBytes("city"),
+                    Bytes.toBytes("Bengaluru"));
+            p.addColumn(Bytes.toBytes("contactinfo"),Bytes.toBytes("country"),
+                    Bytes.toBytes("India"));
+            p.addColumn(Bytes.toBytes("contactinfo"),Bytes.toBytes("email"),
+                    Bytes.toBytes("vivek@abcd.com"));
+
+            try (Table table = connection.getTable(TABLE_NAME)) {
+                table.put(p);
+            }
+
+        }
+
+
+
+
+        // save the put Instance to the HTable.
+//        hTable.put(p);
+        System.out.println("data inserted successfully");
+
+        // close HTable instance
+//        hTable.close();
+    }
+}
+
+
+
+*结果*
+hbase:008:0> scan 'employee'
+ROW                                                              COLUMN+CELL
+ row2001                                                         column=contactinfo:city, timestamp=1609583106281, value=Bengaluru
+ row2001                                                         column=contactinfo:country, timestamp=1609583106281, value=India
+ row2001                                                         column=contactinfo:email, timestamp=1609583106281, value=vivek@abcd.com
+ row2001                                                         column=personal:age, timestamp=1609583106281, value=17
+ row2001                                                         column=personal:name, timestamp=1609583106281, value=Vivek
+1 row(s)
+```
 
 
 
