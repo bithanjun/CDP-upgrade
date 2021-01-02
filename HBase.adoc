@@ -187,5 +187,55 @@ Error:(16, 24) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构
   原因: 实际参数列表和形式参数列表长度不同
 ```
 
+## 正确方式 ##
+```
+package main.java.org.hadoop.hbase.hbasetest;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
 
+import java.io.IOException;
+
+public class RetriveData{
+
+    public static void main(String[] args) throws IOException, Exception{
+
+        Configuration config = HBaseConfiguration.create();
+ //       HTable table = new HTable(config, "employee");
+
+        Connection connection = ConnectionFactory.createConnection(config);
+        Table table = connection.getTable(TableName.valueOf("employee"));
+
+        // instantiate Get class
+        Get g = new Get(Bytes.toBytes("row2001"));
+
+        // get the Result object
+        Result result = table.get(g);
+
+        // read values from Result class object
+        byte [] name = result.getValue(Bytes.toBytes("personal"),Bytes.toBytes("name"));
+        byte [] age = result.getValue(Bytes.toBytes("personal"),Bytes.toBytes("age"));
+        byte [] city = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("city"));
+        byte [] country = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("country"));
+        byte [] email = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("email"));
+
+        System.out.println("name: " + Bytes.toString(name));
+        System.out.println("age: " + Bytes.toString(age));
+        System.out.println("city: " + Bytes.toString(city));
+        System.out.println("country: " + Bytes.toString(country));
+        System.out.println("email: " + Bytes.toString(email));
+    }
+}
+```
+**结果**
+```
+21/01/02 18:44:58 INFO zookeeper.ClientCnxn: Session establishment complete on server ccycloud-4.cdp-hanjun.root.hwx.site/172.27.171.6:2181, sessionid = 0x2052d32754a5aa1, negotiated timeout = 60000
+name: Vivek
+age: 17
+city: Bengaluru
+country: India
+email: vivek@abcd.com
+```
