@@ -1,8 +1,8 @@
-#HBase sample code
+# HBase sample code
 
-##insert
+## insert
 
-**错误方式**
+** 错误方式 **
 ```
 package main.java.org.hadoop.hbase.hbasetest;
 import java.io.IOException;
