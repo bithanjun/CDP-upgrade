@@ -1,4 +1,5 @@
 #HBase sample code
+
 ##insert
 
 **错误方式**
@@ -121,10 +122,11 @@ public class InsertData {
 //        hTable.close();
     }
 }
-
+```
 
 
 *结果*
+```
 hbase:008:0> scan 'employee'
 ROW                                                              COLUMN+CELL
  row2001                                                         column=contactinfo:city, timestamp=1609583106281, value=Bengaluru
