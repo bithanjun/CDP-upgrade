@@ -187,7 +187,7 @@ Error:(16, 24) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构
   原因: 实际参数列表和形式参数列表长度不同
 ```
 
-## 正确方式 ##
+**正确方式**
 ```
 package main.java.org.hadoop.hbase.hbasetest;
 
@@ -238,4 +238,101 @@ age: 17
 city: Bengaluru
 country: India
 email: vivek@abcd.com
+```
+
+## DeleteData ##
+
+**错误方式**
+
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.util.Bytes;
+
+public class DeleteData {
+
+    public static void main(String[] args) throws IOException {
+
+        Configuration conf = HBaseConfiguration.create();
+        HTable table = new HTable(conf, "employee");
+
+        // instantiate Delete class
+        Delete delete = new Delete(Bytes.toBytes("row2001"));
+        delete.deleteColumn(Bytes.toBytes("personal"), Bytes.toBytes("age"));
+        delete.deleteFamily(Bytes.toBytes("contactinfo"));
+
+        // delete the data
+        table.delete(delete);
+
+        table.close();
+        System.out.println("data deleted successfully.....");
+    }
+}
+```
+**错误信息**
+```
+Error:(15, 24) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构造器 HTable应用到给定类型;
+  需要: org.apache.hadoop.hbase.client.ConnectionImplementation,org.apache.hadoop.hbase.client.TableBuilderBase,org.apache.hadoop.hbase.client.RpcRetryingCallerFactory,org.apache.hadoop.hbase.ipc.RpcControllerFactory,java.util.concurrent.ExecutorService
+  找到: org.apache.hadoop.conf.Configuration,java.lang.String
+  原因: 实际参数列表和形式参数列表长度不同
+Error:(19, 15) java: 找不到符号
+  符号:   方法 deleteColumn(byte[],byte[])
+  位置: 类型为org.apache.hadoop.hbase.client.Delete的变量 delete
+```
+
+**正确方式**
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+
+public class DeleteData {
+
+    public static void main(String[] args) throws IOException {
+
+        Configuration config = HBaseConfiguration.create();
+ //       HTable table = new HTable(conf, "employee");
+
+        Connection connection = ConnectionFactory.createConnection(config);
+        Table table = connection.getTable(TableName.valueOf("employee"));
+
+        // instantiate Delete class
+        Delete delete = new Delete(Bytes.toBytes("row2001"));
+//        delete.deleteColumn(Bytes.toBytes("personal"), Bytes.toBytes("age"));
+//        delete.deleteFamily(Bytes.toBytes("contactinfo"));
+        delete.addColumn(Bytes.toBytes("personal"), Bytes.toBytes("age"));
+        delete.addFamily(Bytes.toBytes("contactinfo"));
+
+
+        // delete the data
+        table.delete(delete);
+
+        table.close();
+        System.out.println("data deleted successfully.....");
+    }
+}
+```
+**结果**
+
+```
+hbase:010:0> scan 'employee'
+ROW                                                              COLUMN+CELL
+ row2001                                                         column=personal:name, timestamp=1609584266585, value=Vivek
+1 row(s)
+Took 0.0077 seconds
+hbase:011:0>
 ```
