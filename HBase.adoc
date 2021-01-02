@@ -1,0 +1,52 @@
+#HBase sample code
+##insert
+
+**错误方式**
+
+package main.java.org.hadoop.hbase.hbasetest;
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.util.Bytes;
+
+public class InsertData {
+    public static void main(String[] args) throws IOException {
+
+        // instantiate Configuration class
+        Configuration config = HBaseConfiguration.create();
+
+        // instantiate HTable class
+        HTable hTable = new HTable(config, "employee");
+
+        // instantiate Put class
+        Put p = new Put(Bytes.toBytes("row2001"));
+        // add values using add() method
+        p.add(Bytes.toBytes("personal"),
+                Bytes.toBytes("name"),Bytes.toBytes("Vivek"));
+        p.add(Bytes.toBytes("personal"),
+                Bytes.toBytes("age"),Bytes.toBytes("17"));
+        p.add(Bytes.toBytes("contactinfo"),Bytes.toBytes("city"),
+                Bytes.toBytes("Bengaluru"));
+        p.add(Bytes.toBytes("contactinfo"),Bytes.toBytes("country"),
+                Bytes.toBytes("India"));
+        p.add(Bytes.toBytes("contactinfo"),Bytes.toBytes("email"),
+                Bytes.toBytes("vivek@abcd.com"));
+
+        // save the put Instance to the HTable.
+        hTable.put(p);
+        System.out.println("data inserted successfully");
+
+        // close HTable instance
+        hTable.close();
+    }
+}
+
+**正确方式**
+
+
+
+
+
+
