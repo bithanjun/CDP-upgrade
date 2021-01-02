@@ -2,7 +2,7 @@
 ##insert
 
 **错误方式**
-(```)
+```
 package main.java.org.hadoop.hbase.hbasetest;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
@@ -42,7 +42,7 @@ public class InsertData {
         hTable.close();
     }
 }
-(```)
+```
 
 **正确方式**
 
