@@ -2,7 +2,7 @@
 
 ## insert
 
-** 错误方式 **
+**错误方式**
 ```
 package main.java.org.hadoop.hbase.hbasetest;
 import java.io.IOException;
@@ -137,6 +137,55 @@ ROW                                                              COLUMN+CELL
 1 row(s)
 ```
 
+## RetriveData
+
+**错误方式**
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import java.io.IOException;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
+
+public class RetriveData{
+
+    public static void main(String[] args) throws IOException, Exception{
+
+        Configuration config = HBaseConfiguration.create();
+        HTable table = new HTable(config, "employee");
+
+        // instantiate Get class
+        Get g = new Get(Bytes.toBytes("row2001"));
+
+        // get the Result object
+        Result result = table.get(g);
+
+        // read values from Result class object
+        byte [] name = result.getValue(Bytes.toBytes("personal"),Bytes.toBytes("name"));
+        byte [] age = result.getValue(Bytes.toBytes("personal"),Bytes.toBytes("age"));
+        byte [] city = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("city"));
+        byte [] country = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("country"));
+        byte [] email = result.getValue(Bytes.toBytes("contactinfo"),Bytes.toBytes("email"));
+
+        System.out.println("name: " + Bytes.toString(name));
+        System.out.println("age: " + Bytes.toString(age));
+        System.out.println("city: " + Bytes.toString(city));
+        System.out.println("country: " + Bytes.toString(country));
+        System.out.println("email: " + Bytes.toString(email));
+    }
+}
+```
+***错误信息***
+```
+Error:(16, 24) java: 无法将类 org.apache.hadoop.hbase.client.HTable中的构造器 HTable应用到给定类型;
+  需要: org.apache.hadoop.hbase.client.ConnectionImplementation,org.apache.hadoop.hbase.client.TableBuilderBase,org.apache.hadoop.hbase.client.RpcRetryingCallerFactory,org.apache.hadoop.hbase.ipc.RpcControllerFactory,java.util.concurrent.ExecutorService
+  找到: org.apache.hadoop.conf.Configuration,java.lang.String
+  原因: 实际参数列表和形式参数列表长度不同
+```
 
 
 
