@@ -491,3 +491,30 @@ public class FollowsObserver implements RegionObserver, RegionCoprocessor {
 
 }
 ```
+**协处理器jar包加载过程**
+```
+hbase:002:0> disable 'employee'
+Took 0.8609 seconds
+
+hbase:004:0> alter 'employee', METHOD => 'table_att', 'coprocessor' => 'hdfs://172.27.12.128/hbase/hbasetest.jar|main.java.org.hadoop.hbase.hbasetest.FollowsObserver|1001|'
+Updating all regions with the new schema...
+All regions updated.
+Done.
+
+hbase:006:0> enable 'employee'
+Took 1.2442 seconds
+
+
+hbase:007:0> describe 'employee'
+Table employee is ENABLED
+employee, {TABLE_ATTRIBUTES => {coprocessor$1 => 'hdfs://172.27.12.128/hbase/hbasetest.jar|main.java.org.hadoop.hbase.hbasetest.FollowsObserver|1001|'}}
+COLUMN FAMILIES DESCRIPTION
+{NAME => 'contactinfo', VERSIONS => '1', EVICT_BLOCKS_ON_CLOSE => 'false', NEW_VERSION_BEHAVIOR => 'false', KEEP_DELETED_CELLS => 'FALSE', CACHE_DATA_ON_WRITE => 'false', DATA_BLOCK_ENCODING => 'NONE', TTL => 'FOREVER', MIN_VERSIONS => '0', REPLICATION_S
+COPE => '0', BLOOMFILTER => 'ROW', CACHE_INDEX_ON_WRITE => 'false', IN_MEMORY => 'false', CACHE_BLOOMS_ON_WRITE => 'false', PREFETCH_BLOCKS_ON_OPEN => 'false', COMPRESSION => 'NONE', BLOCKCACHE => 'true', BLOCKSIZE => '65536'}
+
+{NAME => 'personal', VERSIONS => '1', EVICT_BLOCKS_ON_CLOSE => 'false', NEW_VERSION_BEHAVIOR => 'false', KEEP_DELETED_CELLS => 'FALSE', CACHE_DATA_ON_WRITE => 'false', DATA_BLOCK_ENCODING => 'NONE', TTL => 'FOREVER', MIN_VERSIONS => '0', REPLICATION_SCOP
+E => '0', BLOOMFILTER => 'ROW', CACHE_INDEX_ON_WRITE => 'false', IN_MEMORY => 'false', CACHE_BLOOMS_ON_WRITE => 'false', PREFETCH_BLOCKS_ON_OPEN => 'false', COMPRESSION => 'NONE', BLOCKCACHE => 'true', BLOCKSIZE => '65536'}
+
+```
+
+
