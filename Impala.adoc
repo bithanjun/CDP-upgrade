@@ -1,0 +1,57 @@
+1.EXTRACT 和 DATE_PART 函数
+```
+select EXTRACT (CAST('2006-05-12 18:27:28.123456789' AS TIMESTAMP), 'MILLISECOND')
+
+| extract(cast('2006-05-12 18:27:28.123456789' as timestamp), 'millisecond') |
++----------------------------------------------------------------------------+
+| 28123                                                                      |
++----------------------------------------------------------------------------+
+```
+2.SQL 2016 保留关键字
+
+错误方式
+```
+select free from test;
+
+Query: select free from test
+Query submitted at: 2020-12-27 03:07:09 (Coordinator: http://ccycloud-2.cdp-hanjun.root.hwx.site:25000)
+ERROR: ParseException: Syntax error in line 1:
+select free from test
+       ^
+Encountered: A reserved word cannot be used as an identifier: free
+Expected: ALL, CASE, CAST, DATE, DEFAULT, DISTINCT, EXISTS, FALSE, IF, INTERVAL, LEFT, NOT, NULL, REPLACE, RIGHT, STRAIGHT_JOIN, TRUNCATE, TRUE, IDENTIFIER
+
+CAUSED BY: Exception: Syntax error
+```
+
+正确方式
+```
+select `free` from test;
+
+Query: select `free` from test
+Query submitted at: 2020-12-27 03:08:41 (Coordinator: http://ccycloud-2.cdp-hanjun.root.hwx.site:25000)
+Query progress can be monitored at: http://ccycloud-2.cdp-hanjun.root.hwx.site:25000/query_plan?query_id=4d4c9be828e87429:1c75513c00000000
++------+
+| free |
++------+
+| 1    |
++------+
+Fetched 1 row(s) in 0.12s
+```
+3.别名替换
+```
+SELECT ss_item_sk as Item, count(ss_item_sk) as Times_Purchased,sum(ss_quantity) as Total_Quantity_Purchased
+FROM store_sales
+GROUP BY ss_item_sk
+ORDER BY sum(ss_quantity) desc
+LIMIT 5;
++-------+-----------------+--------------------------+
+| item  | times_purchased | total_quantity_purchased |
++-------+-----------------+--------------------------+
+| 21709 | 641             | 33087                    |
+| 84901 | 643             | 33028                    |
+| 1141  | 655             | 32995                    |
+| 11491 | 651             | 32902                    |
+| 34981 | 631             | 32448                    |
++-------+-----------------+--------------------------+
+```
