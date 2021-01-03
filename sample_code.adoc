@@ -78,16 +78,18 @@ SELECT greatest(nvl(col1,0),nvl(col2,0)) FROM test;
 
 ### Impala
 1.EXTRACT 和 DATE_PART 函数
+```
 select EXTRACT (CAST('2006-05-12 18:27:28.123456789' AS TIMESTAMP), 'MILLISECOND')
 
 | extract(cast('2006-05-12 18:27:28.123456789' as timestamp), 'millisecond') |
 +----------------------------------------------------------------------------+
 | 28123                                                                      |
 +----------------------------------------------------------------------------+
-
+```
 2.SQL 2016 保留关键字
 
 错误方式
+```
 select free from test;
 
 Query: select free from test
@@ -99,10 +101,10 @@ Encountered: A reserved word cannot be used as an identifier: free
 Expected: ALL, CASE, CAST, DATE, DEFAULT, DISTINCT, EXISTS, FALSE, IF, INTERVAL, LEFT, NOT, NULL, REPLACE, RIGHT, STRAIGHT_JOIN, TRUNCATE, TRUE, IDENTIFIER
 
 CAUSED BY: Exception: Syntax error
-
+```
 
 正确方式
-
+```
 select `free` from test;
 
 Query: select `free` from test
@@ -114,8 +116,9 @@ Query progress can be monitored at: http://ccycloud-2.cdp-hanjun.root.hwx.site:2
 | 1    |
 +------+
 Fetched 1 row(s) in 0.12s
-
+```
 3.别名替换
+```
 SELECT ss_item_sk as Item, count(ss_item_sk) as Times_Purchased,sum(ss_quantity) as Total_Quantity_Purchased
 FROM store_sales
 GROUP BY ss_item_sk
@@ -130,7 +133,7 @@ LIMIT 5;
 | 11491 | 651             | 32902                    |
 | 34981 | 631             | 32448                    |
 +-------+-----------------+--------------------------+
-
+```
 
 
 ### Spark
