@@ -426,9 +426,68 @@ public class ScanTable{
 
 ```
 
-## 结果 ##
+**结果**
 ```
 Found row : keyvalues={row2001/personal:age/1609585694205/Put/vlen=2/seqid=0, row2001/personal:name/1609585694205/Put/vlen=5/seqid=0}
 ```
 
 ## 协处理器 ##
+```
+package main.java.org.hadoop.hbase.hbasetest;
+
+import org.apache.hadoop.hbase.CoprocessorEnvironment;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.coprocessor.ObserverContext;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessor;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
+import org.apache.hadoop.hbase.coprocessor.RegionObserver;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.wal.WALEdit;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.logging.Logger;
+/**
+ * 2.0 版本之前使用extends BaseRegionObserver 实现
+ *
+ */
+public class FollowsObserver implements RegionObserver, RegionCoprocessor {
+
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(FollowsObserver.class);
+
+    private Connection conn;
+
+    private static final TableName TABLE_NAME = TableName.valueOf("test_table_example");
+    private static final byte[] CF_NAME = Bytes.toBytes("test_cf");
+    private static final byte[] QUALIFIER = Bytes.toBytes("test_column");
+    private static final byte[] ROW_ID = Bytes.toBytes("row02");
+    @Override
+    public void start(CoprocessorEnvironment env) throws IOException {
+        LOGGER.info("****** start ******");
+        conn = ConnectionFactory.createConnection(env.getConfiguration());
+    }
+
+    @Override
+    public void stop(CoprocessorEnvironment env) throws IOException {
+        LOGGER.info("****** stop ******");
+        conn.close();
+    }
+
+    public static void putRow(final Table table) throws IOException {
+        table.put(new Put(ROW_ID).addColumn(CF_NAME, QUALIFIER, Bytes.toBytes("insert employee!")));
+    }
+
+    @Override
+    public void postPut(ObserverContext<RegionCoprocessorEnvironment> c, Put put, WALEdit edit, Durability durability)
+            throws IOException {
+
+
+        Table follow_table = conn.getTable(TABLE_NAME);
+        putRow(follow_table);
+
+        LOGGER.info("****** insert successfully! ****** ");
+    }
+
+}
+```
