@@ -39,11 +39,22 @@ Query progress can be monitored at: http://ccycloud-2.cdp-hanjun.root.hwx.site:2
 Fetched 1 row(s) in 0.12s
 ```
 3.别名替换
+错误方式
 ```
 SELECT ss_item_sk as Item, count(ss_item_sk) as Times_Purchased,sum(ss_quantity) as Total_Quantity_Purchased
 FROM store_sales
 GROUP BY ss_item_sk
-ORDER BY sum(ss_quantity) desc
+ORDER BY Total_Quantity_Purchased / 2 desc
+LIMIT 5;
+
+AnalysisException: Could not resolve column/field reference: 'total_quantity_purchased'
+```
+正确方式
+```
+SELECT ss_item_sk as Item, count(ss_item_sk) as Times_Purchased,sum(ss_quantity) as Total_Quantity_Purchased
+FROM store_sales
+GROUP BY ss_item_sk
+ORDER BY sum(ss_quantity) / 2 desc
 LIMIT 5;
 +-------+-----------------+--------------------------+
 | item  | times_purchased | total_quantity_purchased |
